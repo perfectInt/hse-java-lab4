@@ -1,15 +1,15 @@
+import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.Queue;
+import java.util.List;
 
 public class Manager implements Runnable {
     private static Manager uniqueManager = new Manager();
-    Queue<Request> requests = new LinkedList<>();
+    List<Request> requests = new ArrayList<>();
     Elevator firstElevator = new Elevator(1);
     Elevator secondElevator = new Elevator(2);
     Thread firstElevatorThread = new Thread(firstElevator);
     Thread secondElevatorThread = new Thread(secondElevator);
     boolean condition = true;
-    public final static Object obj = new Object();
 
     public static Manager getManager() {
         return uniqueManager;
@@ -49,15 +49,21 @@ public class Manager implements Runnable {
         return requests.isEmpty();
     }
 
+    public int checkMatches() {
+        return 1;
+    }
+
     public Request pollRequest() {
         if (!isEmpty()) {
-            return requests.poll();
+            Request request = requests.get(0);
+            requests.remove(0);
+            return request;
         } else {
             return null;
         }
     }
 
     public Request peekRequest() {
-        return !isEmpty() ? requests.peek() : null;
+        return !isEmpty() ? requests.get(0) : null;
     }
 }

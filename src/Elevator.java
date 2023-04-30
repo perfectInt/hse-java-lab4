@@ -26,10 +26,6 @@ public class Elevator implements Runnable {
         System.out.println("Elevator " + this.id + " has arrived to " + this.currentFloor + " floor");
     }
 
-    public boolean access(int id) {
-        return this.id == id;
-    }
-
     @Override
     public void run() {
         System.out.println("Elevator " + this.id + " thread");
@@ -37,7 +33,7 @@ public class Elevator implements Runnable {
         while (manager.condition || !manager.isEmpty()) {
             synchronized (Generation.obj) {
                 while (manager.isEmpty()) {
-                    System.out.println("Ждем заявок");
+                    System.out.println("Waiting for requests...");
                     try {
                         Generation.obj.wait();
                     } catch (InterruptedException e) {
@@ -45,12 +41,13 @@ public class Elevator implements Runnable {
                     }
                 }
             }
-            if (manager.peekRequest() == null) continue;
+            if (manager.requests.isEmpty()) continue;
+            if (manager.getBestElevator(manager.peekRequest()) != this.id) continue;
             Request request = manager.pollRequest();
             move(request.callingFloor, this.currentFloor);
             move(request.targetFloor, this.currentFloor);
             synchronized (obj) {
-                if (manager.peekRequest() == null) continue;
+                if (manager.requests.isEmpty()) continue;
                 if (manager.getBestElevator(manager.peekRequest()) == this.id) {
                     Request req = manager.pollRequest();
                     move(req.callingFloor, this.currentFloor);
