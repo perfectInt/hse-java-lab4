@@ -9,6 +9,7 @@ public class Manager implements Runnable {
     Thread firstElevatorThread = new Thread(firstElevator);
     Thread secondElevatorThread = new Thread(secondElevator);
     boolean condition = true;
+    public final static Object obj = new Object();
 
     public static Manager getManager() {
         return uniqueManager;
@@ -27,7 +28,7 @@ public class Manager implements Runnable {
         }
     }
 
-    public synchronized int getBestElevator(Request request) throws InterruptedException {
+    public synchronized int getBestElevator(Request request) {
         int res = Math.abs(firstElevator.currentFloor - request.callingFloor) < Math.abs(secondElevator.currentFloor - request.callingFloor) ?
                 1 : 2;
         if (res == 1) {
@@ -54,5 +55,9 @@ public class Manager implements Runnable {
         } else {
             return null;
         }
+    }
+
+    public Request peekRequest() {
+        return !isEmpty() ? requests.peek() : null;
     }
 }

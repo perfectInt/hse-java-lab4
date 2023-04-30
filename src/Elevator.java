@@ -4,14 +4,14 @@ public class Elevator implements Runnable {
     public int currentFloor = 1;
     public int callingFloor;
     public int targetFloor;
-    private final static Object obj = new Object();
+    public final static Object obj = new Object();
 
     public Elevator(int id) {
         this.id = id;
         direction = Direction.WAITING;
     }
 
-    public void move(int targetFloor, int initialFloor) {
+    public synchronized void move(int targetFloor, int initialFloor) {
         direction = targetFloor > initialFloor ? Direction.UP : Direction.DOWN;
         while (targetFloor != currentFloor) {
             System.out.println("Elevator " + this.id + " is moving " + direction + " to " + targetFloor + " floor (" + this.currentFloor + ")");
@@ -26,21 +26,37 @@ public class Elevator implements Runnable {
         System.out.println("Elevator " + this.id + " has arrived to " + this.currentFloor + " floor");
     }
 
+    public boolean access(int id) {
+        return this.id == id;
+    }
+
     @Override
     public void run() {
         System.out.println("Elevator " + this.id + " thread");
         Manager manager = Manager.getManager();
         while (manager.condition || !manager.isEmpty()) {
-            synchronized (obj) {
-                Request request = manager.pollRequest();
-                if (request == null) continue;
-                move(request.callingFloor, this.currentFloor);
-                move(request.targetFloor, this.currentFloor);
+            synchronized (Generation.obj) {
+                while (manager.isEmpty()) {
+                    System.out.println("Ждем заявок");
+                    try {
+                        Generation.obj.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
+            if (manager.peekRequest() == null) continue;
             Request request = manager.pollRequest();
-            if (request == null) continue;
             move(request.callingFloor, this.currentFloor);
             move(request.targetFloor, this.currentFloor);
+            synchronized (obj) {
+                if (manager.peekRequest() == null) continue;
+                if (manager.getBestElevator(manager.peekRequest()) == this.id) {
+                    Request req = manager.pollRequest();
+                    move(req.callingFloor, this.currentFloor);
+                    move(req.targetFloor, this.currentFloor);
+                }
+            }
         }
     }
 }

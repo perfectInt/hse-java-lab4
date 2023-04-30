@@ -1,5 +1,6 @@
 public class Generation implements Runnable {
     Manager manager = Manager.getManager();
+    public final static Object obj = new Object();
 
     public Generation(int quantity, int period) {
         this.quantity = quantity;
@@ -21,6 +22,9 @@ public class Generation implements Runnable {
             Request request = new Request(randomTargetFloor, randomCallingFloor);
             manager.addRequest(request);
             System.out.println(request);
+            synchronized (obj) {
+                obj.notifyAll();
+            }
             try {
                 Thread.sleep(period);
             } catch (InterruptedException e) {
